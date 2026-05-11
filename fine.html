@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NumeriX — Numerical Methods Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Crimson+Pro:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.js"></script>
+<style>
+:root {
+  --slate: #97b5c2;
+  --blush-light: #f7dce0;
+  --blush: #dfc2c0;
+  --teal: #2b5968;
+  --sand: #cabab1;
+  --white: #fdfbfa;
+  --dark: #1a3540;
+  --gold: #d4a97a;
+  --glitter1: #e8d5c4;
+  --glitter2: #b8d4de;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Crimson Pro', serif;
+  background: var(--dark);
+  color: var(--white);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── GLITTER CANVAS ── */
+#glitter-canvas {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+  opacity: 0.55;
+}
+
+/* ── MARBLE BG ── */
+.marble-bg {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(151,181,194,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 70%, rgba(43,89,104,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(223,194,192,0.12) 0%, transparent 70%),
+    linear-gradient(135deg, #1a3540 0%, #22424f 35%, #1e3d4a 60%, #2b5968 100%);
+  z-index: 0;
+}
+
+.marble-bg::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      -55deg,
+      transparent 0px, transparent 8px,
+      rgba(151,181,194,0.04) 8px, rgba(151,181,194,0.04) 9px
+    ),
+    repeating-linear-gradient(
+      35deg,
+      transparent 0px, transparent 12px,
+      rgba(202,186,177,0.03) 12px, rgba(202,186,177,0.03) 13px
+    );
+}
+
+/* ── LAYOUT ── */
+.container { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+/* ── HEADER ── */
+header {
+  position: relative; z-index: 2;
+  text-align: center;
+  padding: 64px 24px 32px;
+}
+
+.logo-gem {
+  display: inline-block;
+  width: 60px; height: 60px;
+  background: linear-gradient(135deg, var(--blush-light), var(--blush), var(--sand));
+  clip-path: polygon(50% 0%, 100% 30%, 100% 70%, 50% 100%, 0% 70%, 0% 30%);
+  margin-bottom: 16px;
+  animation: gemFloat 3s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(247,220,224,0.4);
+  position: relative;
+}
+
+.logo-gem::after {
+  content: 'N';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 900;
+  color: var(--teal);
+}
+
+@keyframes gemFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--blush-light) 0%, var(--slate) 40%, var(--blush) 70%, var(--sand) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+header p {
+  margin-top: 12px;
+  font-size: 1.15rem;
+  color: var(--slate);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+}
+
+/* ── DIVIDER ── */
+.pearl-divider {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; margin: 32px auto;
+  max-width: 400px;
+}
+.pearl {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, var(--blush-light), var(--sand));
+  box-shadow: 0 0 6px rgba(247,220,224,0.5);
+  animation: pearlShimmer 2s ease-in-out infinite;
+}
+.pearl:nth-child(2) { animation-delay: .3s; width: 12px; height: 12px; }
+.pearl:nth-child(3) { animation-delay: .6s; }
+.pearl:nth-child(4) { animation-delay: .9s; width: 12px; height: 12px; }
+.pearl:nth-child(5) { animation-delay: 1.2s; }
+.pearl-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--slate), transparent); }
+
+@keyframes pearlShimmer {
+  0%, 100% { box-shadow: 0 0 6px rgba(247,220,224,0.4); }
+  50% { box-shadow: 0 0 16px rgba(247,220,224,0.8), 0 0 30px rgba(151,181,194,0.3); }
+}
+
+/* ── METHOD TABS ── */
+.methods-nav {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center;
+  padding: 0 24px; margin-bottom: 32px;
+  position: relative; z-index: 2;
+}
+
+.method-tab {
+  padding: 10px 18px;
+  border: 1px solid rgba(151,181,194,0.3);
+  border-radius: 30px;
+  background: rgba(43,89,104,0.2);
+  color: var(--slate);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+
+.method-tab::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(247,220,224,0.15), rgba(151,181,194,0.1));
+  opacity: 0; transition: opacity 0.3s;
+}
+
+.method-tab:hover::before, .method-tab.active::before { opacity: 1; }
+
+.method-tab.active {
+  border-color: var(--blush);
+  color: var(--blush-light);
+  box-shadow: 0 0 20px rgba(223,194,192,0.25), 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.method-tab:hover { border-color: var(--slate); color: var(--white); }
+
+/* ── PANELS ── */
+.panel {
+  display: none;
+  position: relative; z-index: 2;
+  max-width: 820px; margin: 0 auto 32px;
+  padding: 0 24px;
+}
+.panel.active { display: block; animation: panelFadeIn 0.4s ease; }
+
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── CARDS ── */
+.card {
+  background: linear-gradient(135deg,
+    rgba(43,89,104,0.35) 0%,
+    rgba(34,66,79,0.4) 50%,
+    rgba(43,89,104,0.3) 100%);
+  border: 1px solid rgba(151,181,194,0.2);
+  border-radius: 20px;
+  padding: 28px 32px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(247,220,224,0.1);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(247,220,224,0.4), rgba(151,181,194,0.4), transparent);
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  color: var(--blush-light);
+  margin-bottom: 6px;
+  font-style: italic;
+}
+
+.card-desc {
+  font-size: 0.92rem;
+  color: var(--slate);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* ── FORM ELEMENTS ── */
+label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--slate);
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(26,53,64,0.6);
+  border: 1px solid rgba(151,181,194,0.25);
+  border-radius: 12px;
+  color: var(--white);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.88rem;
+  margin-bottom: 14px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  outline: none;
+  resize: vertical;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--blush);
+  box-shadow: 0 0 0 3px rgba(223,194,192,0.12), 0 0 20px rgba(223,194,192,0.08);
+}
+
+input::placeholder, textarea::placeholder { color: rgba(151,181,194,0.5); }
+
+select option { background: var(--dark); color: var(--white); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ── MATRIX ── */
+.matrix-container { overflow-x: auto; margin-bottom: 14px; }
+.matrix-grid { display: inline-grid; gap: 6px; }
+.matrix-cell {
+  width: 80px; padding: 8px 10px;
+  background: rgba(26,53,64,0.6);
+  border: 1px solid rgba(151,181,194,0.2);
+  border-radius: 8px; color: var(--white);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.82rem;
+  text-align: center; outline: none;
+  transition: border-color 0.2s;
+}
+.matrix-cell:focus { border-color: var(--blush); }
+
+.matrix-size-row { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.matrix-size-row label { margin: 0; }
+.matrix-size-row input { width: 70px; margin: 0; }
+
+/* ── BUTTONS ── */
+.btn-solve {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 32px;
+  background: linear-gradient(135deg, var(--teal), #3a7085, var(--teal));
+  border: 1px solid rgba(151,181,194,0.4);
+  border-radius: 50px;
+  color: var(--blush-light);
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem; font-style: italic;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 20px rgba(43,89,104,0.4);
+  position: relative; overflow: hidden;
+  width: 100%; justify-content: center;
+  margin-top: 4px;
+}
+
+.btn-solve::before {
+  content: '';
+  position: absolute; top: -50%; left: -100%;
+  width: 60%; height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(247,220,224,0.2), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s;
+}
+.btn-solve:hover::before { left: 150%; }
+.btn-solve:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(43,89,104,0.5), 0 0 40px rgba(223,194,192,0.15);
+  border-color: var(--blush);
+}
+.btn-solve:active { transform: translateY(0); }
+
+.btn-sm {
+  padding: 8px 18px;
+  background: rgba(43,89,104,0.4);
+  border: 1px solid rgba(151,181,194,0.3);
+  border-radius: 20px;
+  color: var(--slate);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.9rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-sm:hover { border-color: var(--blush); color: var(--blush-light); }
+
+/* ── RESULTS ── */
+.result-box {
+  background: linear-gradient(135deg,
+    rgba(26,53,64,0.8), rgba(43,89,104,0.5));
+  border: 1px solid rgba(247,220,224,0.2);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-top: 20px;
+  display: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-box.show { display: block; animation: resultReveal 0.5s ease; }
+
+@keyframes resultReveal {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.result-box::before {
+  content: '✦';
+  position: absolute; top: 12px; right: 16px;
+  color: var(--blush); font-size: 1.2rem;
+  animation: starSpin 4s linear infinite;
+}
+
+@keyframes starSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.result-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem; font-style: italic;
+  color: var(--blush-light);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.glitter-result {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.3rem;
+  background: linear-gradient(135deg, var(--gold), var(--blush-light), var(--slate), var(--blush));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  margin: 8px 0;
+  animation: shimmerText 3s ease-in-out infinite;
+}
+
+@keyframes shimmerText {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+.iteration-table {
+  width: 100%; border-collapse: collapse;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem; margin-top: 12px;
+}
+
+.iteration-table th {
+  background: rgba(43,89,104,0.5);
+  color: var(--blush);
+  padding: 8px 12px; text-align: left;
+  border-bottom: 1px solid rgba(151,181,194,0.2);
+  font-weight: 700;
+}
+
+.iteration-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(151,181,194,0.08);
+  color: var(--white);
+}
+
+.iteration-table tr:nth-child(even) td {
+  background: rgba(151,181,194,0.05);
+}
+.iteration-table tr:last-child td {
+  background: rgba(247,220,224,0.08);
+  color: var(--blush-light);
+}
+
+/* ── ERROR BOX ── */
+.error-box {
+  background: rgba(180,60,80,0.15);
+  border: 1px solid rgba(220,100,120,0.3);
+  border-radius: 12px; padding: 14px 18px;
+  color: #f4a0b0; font-size: 0.9rem;
+  margin-top: 12px; display: none;
+}
+.error-box.show { display: block; }
+
+/* ── INFO HINT ── */
+.hint {
+  background: rgba(151,181,194,0.1);
+  border-left: 3px solid var(--slate);
+  border-radius: 0 10px 10px 0;
+  padding: 10px 14px;
+  font-size: 0.85rem; color: var(--slate);
+  margin-bottom: 14px; line-height: 1.5;
+}
+
+.hint code {
+  font-family: 'Space Mono', monospace;
+  background: rgba(43,89,104,0.4);
+  padding: 2px 6px; border-radius: 4px;
+  color: var(--blush-light); font-size: 0.82rem;
+}
+
+/* ── SECTION TAG ── */
+.section-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(43,89,104,0.5);
+  border: 1px solid rgba(151,181,194,0.25);
+  border-radius: 20px;
+  font-size: 0.75rem; color: var(--slate);
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative; z-index: 2;
+  text-align: center;
+  padding: 48px 24px;
+  margin-top: 32px;
+  border-top: 1px solid rgba(151,181,194,0.15);
+}
+
+.footer-contact {
+  display: flex; gap: 20px; justify-content: center;
+  flex-wrap: wrap; margin-top: 20px;
+}
+
+.contact-link {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 22px;
+  background: rgba(43,89,104,0.3);
+  border: 1px solid rgba(151,181,194,0.2);
+  border-radius: 50px;
+  color: var(--slate);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+.contact-link:hover {
+  border-color: var(--blush);
+  color: var(--blush-light);
+  box-shadow: 0 4px 20px rgba(223,194,192,0.15);
+  transform: translateY(-2px);
+}
+
+.contact-link svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* ── SPARKLE ── */
+.sparkle-ring {
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  border: 1px solid rgba(247,220,224,0.06);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: ringPulse 6s ease-in-out infinite;
+}
+.sparkle-ring:nth-child(2) { width: 500px; height: 500px; animation-delay: 2s; }
+.sparkle-ring:nth-child(3) { width: 700px; height: 700px; animation-delay: 4s; }
+
+@keyframes ringPulse {
+  0%, 100% { opacity: 0.3; transform: translate(-50%,-50%) scale(1); }
+  50% { opacity: 0.08; transform: translate(-50%,-50%) scale(1.03); }
+}
+
+/* ── CONVERTER NOTE ── */
+.trig-note {
+  font-size: 0.8rem; color: var(--gold);
+  font-family: 'Space Mono', monospace;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: rgba(212,169,122,0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(212,169,122,0.15);
+}
+
+/* ── TYPE SELECTOR ── */
+.type-toggle {
+  display: flex; gap: 8px; margin-bottom: 14px;
+}
+.type-btn {
+  flex: 1; padding: 10px;
+  background: rgba(26,53,64,0.6);
+  border: 1px solid rgba(151,181,194,0.2);
+  border-radius: 10px;
+  color: var(--slate);
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.type-btn.active {
+  background: rgba(43,89,104,0.5);
+  border-color: var(--blush);
+  color: var(--blush-light);
+}
+
+/* spinner */
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(247,220,224,0.3);
+  border-top-color: var(--blush-light);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="marble-bg">
+  <div class="sparkle-ring"></div>
+  <div class="sparkle-ring"></div>
+  <div class="sparkle-ring"></div>
+</div>
+<canvas id="glitter-canvas"></canvas>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-gem"></div>
+  <h1>Nurram</h1>
+  <p>Numerical Methods — Roots &amp; Systems of Equations</p>
+</header>
+
+<div class="pearl-divider">
+  <div class="pearl-line"></div>
+  <div class="pearl"></div>
+  <div class="pearl"></div>
+  <div class="pearl"></div>
+  <div class="pearl"></div>
+  <div class="pearl"></div>
+  <div class="pearl-line"></div>
+</div>
+
+<!-- METHOD TABS -->
+<nav class="methods-nav">
+  <button class="method-tab active" onclick="showPanel('jacobi')">Jacobi</button>
+  <button class="method-tab" onclick="showPanel('gauss')">Gauss-Seidel</button>
+  <button class="method-tab" onclick="showPanel('bisection')">Bisection</button>
+  <button class="method-tab" onclick="showPanel('falsepos')">False Position</button>
+  <button class="method-tab" onclick="showPanel('newton')">Newton's</button>
+  <button class="method-tab" onclick="showPanel('secant')">Secant</button>
+  <button class="method-tab" onclick="showPanel('leastsq')">Least Squares</button>
+</nav>
+
+<!-- ════════════════════════════════════════
+     1. JACOBI
+═════════════════════════════════════════ -->
+<section class="panel active" id="panel-jacobi">
+  <div class="card">
+    <div class="section-tag">Closed — System Solver</div>
+    <div class="card-title">Jacobi Iteration Method</div>
+    <div class="card-desc">Solves a diagonally-dominant linear system Ax = b. Each variable is updated using values from the <em>previous</em> iteration only.</div>
+
+    <div class="hint">Enter matrix size (n×n). Fill in coefficients a<sub>ij</sub> and constants b<sub>i</sub>. Uses tolerance ε = 10⁻⁶ automatically.</div>
+
+    <div class="matrix-size-row">
+      <label>Size n =</label>
+      <input type="number" id="jac-n" value="3" min="2" max="8" style="width:70px;margin:0" oninput="buildMatrix('jac',this.value)">
+      <button class="btn-sm" onclick="buildMatrix('jac', document.getElementById('jac-n').value)">Build Matrix</button>
+    </div>
+
+    <div id="jac-matrix-wrap"></div>
+
+    <button class="btn-solve" onclick="solveJacobi()">
+      <span>Solve with Jacobi</span>
+    </button>
+    <div class="result-box" id="jac-result"></div>
+    <div class="error-box" id="jac-error"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     2. GAUSS-SEIDEL
+═════════════════════════════════════════ -->
+<section class="panel" id="panel-gauss">
+  <div class="card">
+    <div class="section-tag">Closed — System Solver</div>
+    <div class="card-title">Gauss-Seidel Method</div>
+    <div class="card-desc">Like Jacobi but each variable is updated <em>immediately</em> using the latest values — typically converges faster.</div>
+
+    <div class="hint">Same input format as Jacobi. Tolerance ε = 10⁻⁶.</div>
+
+    <div class="matrix-size-row">
+      <label>Size n =</label>
+      <input type="number" id="gs-n" value="3" min="2" max="8" style="width:70px;margin:0" oninput="buildMatrix('gs',this.value)">
+      <button class="btn-sm" onclick="buildMatrix('gs', document.getElementById('gs-n').value)">Build Matrix</button>
+    </div>
+
+    <div id="gs-matrix-wrap"></div>
+
+    <button class="btn-solve" onclick="solveGaussSeidel()">
+      <span>Solve with Gauss-Seidel</span>
+    </button>
+    <div class="result-box" id="gs-result"></div>
+    <div class="error-box" id="gs-error"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     3. BISECTION
+═════════════════════════════════════════ -->
+<section class="panel" id="panel-bisection">
+  <div class="card">
+    <div class="section-tag">Closed — Root Finding</div>
+    <div class="card-title">Bisection Method</div>
+    <div class="card-desc">Repeatedly halves an interval [a, b] where f(a)·f(b) &lt; 0 until the root is isolated to the required precision.</div>
+
+    <div class="trig-note">⚠ Trig functions computed in radians. Supported: sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, exp, log, log10, sqrt, abs, pi, e</div>
+
+    <div class="hint">f(x) — write as a math expression. Example: <code>x - cos(x)</code> or <code>3*x^2 - exp(x)</code></div>
+
+    <label>f(x) =</label>
+    <input type="text" id="bis-fx" placeholder="e.g.  x^3 + 4*x^2 - 10" value="x^3 + 4*x^2 - 10">
+
+    <div class="form-row">
+      <div>
+        <label>a (lower bound)</label>
+        <input type="number" id="bis-a" value="1" step="any">
+      </div>
+      <div>
+        <label>b (upper bound)</label>
+        <input type="number" id="bis-b" value="2" step="any">
+      </div>
+    </div>
+
+    <button class="btn-solve" onclick="solveBisection()">
+      <span>Find Root</span>
+    </button>
+    <div class="result-box" id="bis-result"></div>
+    <div class="error-box" id="bis-error"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     4. FALSE POSITION
+═════════════════════════════════════════ -->
+<section class="panel" id="panel-falsepos">
+  <div class="card">
+    <div class="section-tag">Closed — Root Finding</div>
+    <div class="card-title">False Position (Regula Falsi)</div>
+    <div class="card-desc">Uses the x-intercept of the secant line through (a, f(a)) and (b, f(b)) as the next approximation.</div>
+
+    <div class="trig-note">⚠ Trig functions computed in radians. Same function syntax as Bisection.</div>
+
+    <label>f(x) =</label>
+    <input type="text" id="fp-fx" placeholder="e.g.  3*x^2 - exp(x)" value="3*x^2 - exp(x)">
+
+    <div class="form-row">
+      <div>
+        <label>a (lower bound)</label>
+        <input type="number" id="fp-a" value="0" step="any">
+      </div>
+      <div>
+        <label>b (upper bound)</label>
+        <input type="number" id="fp-b" value="1" step="any">
+      </div>
+    </div>
+
+    <button class="btn-solve" onclick="solveFalsePosition()">
+      <span>Find Root</span>
+    </button>
+    <div class="result-box" id="fp-result"></div>
+    <div class="error-box" id="fp-error"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     5. NEWTON'S METHOD
+═════════════════════════════════════════ -->
+<section class="panel" id="panel-newton">
+  <div class="card">
+    <div class="section-tag">Open — Root Finding</div>
+    <div class="card-title">Newton-Raphson Method</div>
+    <div class="card-desc">Uses the tangent line at each estimate: x<sub>k+1</sub> = x<sub>k</sub> − f(x<sub>k</sub>) / f′(x<sub>k</sub>). Requires an initial guess and the derivative.</div>
+
+    <div class="trig-note">⚠ Trig functions computed in radians. f′(x) is computed via automatic numerical differentiation if left blank.</div>
+
+    <label>f(x) =</label>
+    <input type="text" id="newt-fx" placeholder="e.g.  sin(x) - (x+1)/(x-1)" value="sin(x) - (x+1)/(x-1)">
+
+    <label>f′(x) = (optional — leave blank for auto)</label>
+    <input type="text" id="newt-dfx" placeholder="e.g.  cos(x) + 2/(x-1)^2">
+
+    <label>x₀ — initial guess</label>
+    <input type="number" id="newt-x0" value="-0.4" step="any">
+
+    <button class="btn-solve" onclick="solveNewton()">
+      <span>Find Root</span>
+    </button>
+    <div class="result-box" id="newt-result"></div>
+    <div class="error-box" id="newt-error"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     6. SECANT
+═════════════════════════════════════════ -->
+<section class="panel" id="panel-secant">
+  <div class="card">
+    <div class="section-tag">Open — Root Finding</div>
+    <div class="card-title">Secant Method</div>
+    <div class="card-desc">Approximates the derivative using a finite difference: f′(x<sub>k</sub>) ≈ [f(x<sub>k</sub>) − f(x<sub>k-1</sub>)] / (x<sub>k</sub> − x<sub>k-1</sub>). No derivative required.</div>
+
+    <div class="trig-note">⚠ Trig functions computed in radians.</div>
+
+    <label>f(x) =</label>
+    <input type="text" id="sec-fx" placeholder="e.g.  x^2*exp(x) - 1" value="x^2*exp(x) - 1">
+
+    <div class="form-row">
+      <div>
+        <label>x₀ (first guess)</label>
+        <input type="number" id="sec-x0" value="0" step="any">
+      </div>
+      <div>
+        <label>x₁ (second guess)</label>
+        <input type="number" id="sec-x1" value="1" step="any">
+      </div>
+    </div>
+
+    <button class="btn-solve" onclick="solveSecant()">
+      <span>Find Root</span>
+    </button>
+    <div class="result-box" id="sec-result"></div>
+    <div class="error-box" id="sec-error"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════
+     7. LINEAR LEAST SQUARES
+═════════════════════════════════════════ -->
+<section class="panel" id="panel-leastsq">
+  <div class="card">
+    <div class="section-tag">Regression</div>
+    <div class="card-title">Linear Least Squares</div>
+    <div class="card-desc">Fits y = ax + b to a set of data points by minimising the sum of squared residuals.</div>
+
+    <div class="type-toggle">
+      <button class="type-btn active" id="ls-linear-btn" onclick="setLSType('linear')">Linear: y = ax + b</button>
+      <button class="type-btn" id="ls-nonlinear-btn" onclick="setLSType('nonlinear')">Non-linear f(x)</button>
+    </div>
+
+    <div id="ls-linear-inputs">
+      <div class="hint">Enter x values and y values, comma-separated (same number of points).</div>
+      <label>x values</label>
+      <input type="text" id="ls-x" placeholder="1, 2, 3, 4, 5" value="1, 2, 3, 4, 5">
+      <label>y values</label>
+      <input type="text" id="ls-y" placeholder="2.1, 3.9, 6.2, 7.8, 9.9" value="2.1, 3.9, 6.2, 7.8, 9.9">
+    </div>
+
+    <div id="ls-nonlinear-inputs" style="display:none">
+      <div class="trig-note">⚠ Trig functions computed in radians. For non-linear models, linearisation is applied where possible.</div>
+      <div class="hint">Enter x, y pairs and specify the non-linear model. Supported linearisable models: <code>y=a*exp(b*x)</code>, <code>y=a*x^b</code>, <code>y=a+b*ln(x)</code></div>
+      <label>x values</label>
+      <input type="text" id="ls-nl-x" placeholder="1, 2, 3, 4, 5">
+      <label>y values</label>
+      <input type="text" id="ls-nl-y" placeholder="2.5, 3.5, 4.8, 6.5, 9.0">
+      <label>Model type</label>
+      <select id="ls-nl-model">
+        <option value="exp">y = a·exp(b·x)</option>
+        <option value="power">y = a·x^b</option>
+        <option value="log">y = a + b·ln(x)</option>
+      </select>
+    </div>
+
+    <button class="btn-solve" onclick="solveLeastSquares()">
+      <span>Compute Fit</span>
+    </button>
+    <div class="result-box" id="ls-result"></div>
+    <div class="error-box" id="ls-error"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <p style="color:var(--slate); font-size:0.95rem; font-style:italic;">Crafted with numerical precision ✦ Ikram Hassan</p>
+    <div class="footer-contact">
+      <a href="https://www.linkedin.com/in/ikram-hassan-/" target="_blank" class="contact-link">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+        LinkedIn — Ikram Hassan
+      </a>
+    </div>
+    <p style="color:rgba(151,181,194,0.4); font-size:0.78rem; margin-top:20px; font-family:'Space Mono',monospace;">Nurram· Bisection · False Position · Newton · Secant · Jacobi · Gauss-Seidel · Least Squares</p>
+  </div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════
+// GLITTER CANVAS
+// ══════════════════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('glitter-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  const COLORS = ['#97b5c2','#f7dce0','#dfc2c0','#cabab1','#d4a97a','#b8d4de','#ffffff'];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function Particle() {
+    this.reset = function() {
+      this.x = Math.random() * W;
+      this.y = Math.random() * H;
+      this.r = Math.random() * 2 + 0.5;
+      this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      this.alpha = Math.random() * 0.7 + 0.1;
+      this.vx = (Math.random() - 0.5) * 0.3;
+      this.vy = (Math.random() - 0.5) * 0.3;
+      this.life = Math.random() * 200 + 100;
+      this.age = 0;
+      this.type = Math.random() < 0.3 ? 'star' : 'circle';
+    };
+    this.reset();
+    this.y = Math.random() * H; // spread initially
+  }
+
+  for (let i = 0; i < 180; i++) particles.push(new Particle());
+
+  function drawStar(cx, cy, r, alpha, color) {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.translate(cx, cy);
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {
+      ctx.lineTo(Math.cos((i * 90 - 45) * Math.PI / 180) * r,
+                 Math.sin((i * 90 - 45) * Math.PI / 180) * r);
+      ctx.lineTo(Math.cos((i * 90) * Math.PI / 180) * r * 0.3,
+                 Math.sin((i * 90) * Math.PI / 180) * r * 0.3);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.age++;
+      const fade = p.age < 30 ? p.age / 30 : p.age > p.life - 30 ? (p.life - p.age) / 30 : 1;
+      const a = p.alpha * fade;
+      if (p.type === 'star') {
+        drawStar(p.x, p.y, p.r * 2.5, a, p.color);
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = a;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+      if (p.age >= p.life) p.reset();
+    });
+    requestAnimationFrame(animate);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  animate();
+})();
+
+// ══════════════════════════════════════════════════
+// PANEL SWITCHING
+// ══════════════════════════════════════════════════
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  // auto-build matrix if needed
+  if (id === 'jacobi') buildMatrix('jac', document.getElementById('jac-n').value);
+  if (id === 'gauss')  buildMatrix('gs',  document.getElementById('gs-n').value);
+}
+
+// ══════════════════════════════════════════════════
+// MATH EVAL HELPER (supports trig in radians)
+// ══════════════════════════════════════════════════
+function evalFn(expr, xVal) {
+  // math.js already uses radians for trig
+  try {
+    const scope = { x: xVal };
+    return math.evaluate(expr, scope);
+  } catch(e) {
+    throw new Error('Cannot evaluate: ' + e.message);
+  }
+}
+
+function evalDFn(expr, dfExpr, xVal) {
+  if (dfExpr && dfExpr.trim()) {
+    return evalFn(dfExpr, xVal);
+  }
+  // numerical derivative
+  const h = 1e-7;
+  return (evalFn(expr, xVal + h) - evalFn(expr, xVal - h)) / (2 * h);
+}
+
+// ══════════════════════════════════════════════════
+// MATRIX BUILDER
+// ══════════════════════════════════════════════════
+function buildMatrix(prefix, n) {
+  n = parseInt(n) || 3;
+  n = Math.min(Math.max(n, 2), 8);
+  const wrap = document.getElementById(prefix + '-matrix-wrap');
+
+  const defaults3 = {
+    a: [[10,-1,2],[-1,11,-1],[2,-1,10]],
+    b: [6, 25, -11]
+  };
+
+  let html = `<div style="overflow-x:auto;margin-bottom:14px">`;
+  html += `<div style="display:inline-flex;gap:8px;align-items:flex-start">`;
+  // A matrix
+  html += `<div>
+    <div style="font-size:0.75rem;color:var(--slate);margin-bottom:4px;font-family:'Space Mono',monospace;">Coefficients A (n×n)</div>
+    <div class="matrix-grid" style="grid-template-columns:repeat(${n},80px);gap:6px" id="${prefix}-A">`;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    let def = '';
+    if (n === 3 && defaults3.a[i]) def = defaults3.a[i][j] || 0;
+    html += `<input class="matrix-cell" id="${prefix}-a${i}${j}" type="number" step="any" value="${def}" placeholder="a${i+1}${j+1}">`;
+  }
+  html += `</div></div>`;
+
+  // b vector
+  html += `<div>
+    <div style="font-size:0.75rem;color:var(--slate);margin-bottom:4px;font-family:'Space Mono',monospace;">b (rhs)</div>
+    <div style="display:flex;flex-direction:column;gap:6px" id="${prefix}-B">`;
+  for (let i = 0; i < n; i++) {
+    let def = n === 3 ? (defaults3.b[i] || '') : '';
+    html += `<input class="matrix-cell" id="${prefix}-b${i}" type="number" step="any" value="${def}" placeholder="b${i+1}">`;
+  }
+  html += `</div></div></div></div>`;
+  wrap.innerHTML = html;
+}
+
+function readMatrix(prefix, n) {
+  const A = [], b = [];
+  for (let i = 0; i < n; i++) {
+    A.push([]);
+    b.push(parseFloat(document.getElementById(`${prefix}-b${i}`).value) || 0);
+    for (let j = 0; j < n; j++) {
+      A[i].push(parseFloat(document.getElementById(`${prefix}-a${i}${j}`).value) || 0);
+    }
+  }
+  return { A, b };
+}
+
+// ══════════════════════════════════════════════════
+// RESULT HELPERS
+// ══════════════════════════════════════════════════
+function showResult(id, html) {
+  const el = document.getElementById(id);
+  el.innerHTML = html; el.classList.add('show');
+  document.getElementById(id.replace('result','error')).classList.remove('show');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = '⚠ ' + msg; el.classList.add('show');
+  document.getElementById(id.replace('error','result')).classList.remove('show');
+}
+function fmtNum(x) { return Number(x.toPrecision(8)).toString(); }
+function vecStr(v) { return '[' + v.map(x => fmtNum(x)).join(', ') + ']'; }
+
+// ══════════════════════════════════════════════════
+// 1. JACOBI
+// ══════════════════════════════════════════════════
+function solveJacobi() {
+  const n = parseInt(document.getElementById('jac-n').value);
+  const { A, b } = readMatrix('jac', n);
+  try {
+    const res = jacobiIterate(A, b, n, false);
+    showResult('jac-result', buildIterResult('Jacobi', res));
+  } catch(e) { showError('jac-error', e.message); }
+}
+
+function solveGaussSeidel() {
+  const n = parseInt(document.getElementById('gs-n').value);
+  const { A, b } = readMatrix('gs', n);
+  try {
+    const res = jacobiIterate(A, b, n, true);
+    showResult('gs-result', buildIterResult('Gauss-Seidel', res));
+  } catch(e) { showError('gs-error', e.message); }
+}
+
+function jacobiIterate(A, b, n, gaussSeidel) {
+  const TOL = 1e-6;
+  const MAX = 300;
+  // check diagonal dominance warning
+  for (let i = 0; i < n; i++) {
+    if (A[i][i] === 0) throw new Error(`Diagonal element A[${i+1}][${i+1}] is zero. Reorder equations.`);
+  }
+  // initial guess: 0 vector (per professor instruction — no initial guess input)
+  let x = new Array(n).fill(0);
+  const history = [[...x]];
+
+  for (let iter = 0; iter < MAX; iter++) {
+    const xNew = gaussSeidel ? x : [...x];
+    for (let i = 0; i < n; i++) {
+      let sum = b[i];
+      for (let j = 0; j < n; j++) {
+        if (j !== i) {
+          sum -= A[i][j] * (gaussSeidel ? xNew[j] : x[j]);
+        }
+      }
+      xNew[i] = sum / A[i][i];
+    }
+    history.push([...xNew]);
+    // check convergence
+    let maxErr = 0;
+    for (let i = 0; i < n; i++) {
+      const e = Math.abs((xNew[i] - x[i]) / (Math.abs(xNew[i]) < 1e-15 ? 1 : xNew[i]));
+      if (e > maxErr) maxErr = e;
+    }
+    x = [...xNew];
+    if (maxErr < TOL) {
+      return { x, history, converged: true, iters: iter + 1 };
+    }
+  }
+  return { x, history, converged: false, iters: MAX };
+}
+
+function buildIterResult(method, res) {
+  let rows = res.history.slice(0, Math.min(res.history.length, 50)).map((v, i) => {
+    const isLast = i === res.history.length - 1 || i === 49;
+    return `<tr class="${isLast ? 'highlight' : ''}">
+      <td>${String(i).padStart(3,'0')}</td>
+      <td>${vecStr(v)}</td>
+    </tr>`;
+  }).join('');
+
+  const status = res.converged
+    ? `<span style="color:#8fd4a0">Converged in ${res.iters} iter</span>`
+    : `<span style="color:#f4a0b0">Did not converge in ${res.iters} iterations</span>`;
+
+  return `
+    <div class="result-title">✦ ${method} Iteration — ${status}</div>
+    <div class="glitter-result">x = ${vecStr(res.x)}</div>
+    <p style="font-size:0.85rem;color:var(--slate);margin-top:8px;">ε = 10⁻⁶ (relative)</p>
+    <div style="max-height:300px;overflow-y:auto;margin-top:14px;border-radius:10px;overflow:hidden">
+    <table class="iteration-table">
+      <thead><tr><th>Iter</th><th>Solution Vector</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// 3. BISECTION
+// ══════════════════════════════════════════════════
+function solveBisection() {
+  const expr = document.getElementById('bis-fx').value.trim();
+  let a = parseFloat(document.getElementById('bis-a').value);
+  let b = parseFloat(document.getElementById('bis-b').value);
+  if (!expr) return showError('bis-error','Please enter f(x).');
+  try {
+    const fa = evalFn(expr, a), fb = evalFn(expr, b);
+    if (fa * fb >= 0) return showError('bis-error', `f(a)·f(b) = ${(fa*fb).toPrecision(4)} ≥ 0. No sign change in [${a}, ${b}]. Check interval.`);
+
+    const TOL = 1e-6, MAX = 200;
+    const rows = [];
+    let c, fc;
+    for (let i = 0; i < MAX; i++) {
+      c = (a + b) / 2;
+      fc = evalFn(expr, c);
+      rows.push({ i: i+1, a, b, c, fc });
+      if (Math.abs(fc) < TOL || (b - a) / 2 < TOL) break;
+      if (evalFn(expr, a) * fc < 0) b = c; else a = c;
+    }
+    const last = rows[rows.length - 1];
+    let tableRows = rows.slice(0, 30).map(r =>
+      `<tr><td>${r.i}</td><td>${fmtNum(r.a)}</td><td>${fmtNum(r.b)}</td><td>${fmtNum(r.c)}</td><td>${fmtNum(r.fc)}</td></tr>`
+    ).join('');
+    if (rows.length > 30) tableRows += `<tr><td colspan="5" style="text-align:center;color:var(--slate);">... ${rows.length - 30} more iterations ...</td></tr>`;
+    tableRows += `<tr><td><b>${last.i}</b></td><td>${fmtNum(last.a)}</td><td>${fmtNum(last.b)}</td><td><b>${fmtNum(last.c)}</b></td><td>${fmtNum(last.fc)}</td></tr>`;
+
+    showResult('bis-result', `
+      <div class="result-title">✦ Bisection Result</div>
+      <div class="glitter-result">Root ≈ ${fmtNum(last.c)}</div>
+      <p style="font-size:0.85rem;color:var(--slate);margin-top:4px;">f(root) = ${fmtNum(last.fc)} &nbsp;·&nbsp; ${last.i} iterations &nbsp;·&nbsp; ε = 10⁻⁶</p>
+      <div style="max-height:280px;overflow-y:auto;margin-top:14px;border-radius:10px;overflow:hidden">
+      <table class="iteration-table">
+        <thead><tr><th>k</th><th>a</th><th>b</th><th>c = (a+b)/2</th><th>f(c)</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table></div>`);
+  } catch(e) { showError('bis-error', e.message); }
+}
+
+// ══════════════════════════════════════════════════
+// 4. FALSE POSITION
+// ══════════════════════════════════════════════════
+function solveFalsePosition() {
+  const expr = document.getElementById('fp-fx').value.trim();
+  let a = parseFloat(document.getElementById('fp-a').value);
+  let b = parseFloat(document.getElementById('fp-b').value);
+  if (!expr) return showError('fp-error','Please enter f(x).');
+  try {
+    const fa0 = evalFn(expr, a), fb0 = evalFn(expr, b);
+    if (fa0 * fb0 >= 0) return showError('fp-error', `f(a)·f(b) ≥ 0. No sign change in [${a}, ${b}].`);
+
+    const TOL = 1e-6, MAX = 200;
+    const rows = [];
+    let c, fc;
+    for (let i = 0; i < MAX; i++) {
+      const fa = evalFn(expr, a), fb = evalFn(expr, b);
+      c = (a * fb - b * fa) / (fb - fa);
+      fc = evalFn(expr, c);
+      rows.push({ i: i+1, a, b, c, fc });
+      if (Math.abs(fc) < TOL) break;
+      if (fa * fc < 0) b = c; else a = c;
+    }
+    const last = rows[rows.length - 1];
+    let tableRows = rows.slice(0, 30).map(r =>
+      `<tr><td>${r.i}</td><td>${fmtNum(r.a)}</td><td>${fmtNum(r.b)}</td><td>${fmtNum(r.c)}</td><td>${fmtNum(r.fc)}</td></tr>`
+    ).join('');
+    if (rows.length > 30) tableRows += `<tr><td colspan="5" style="text-align:center;color:var(--slate);">... ${rows.length - 30} more iterations ...</td></tr>`;
+    tableRows += `<tr><td><b>${last.i}</b></td><td>${fmtNum(last.a)}</td><td>${fmtNum(last.b)}</td><td><b>${fmtNum(last.c)}</b></td><td>${fmtNum(last.fc)}</td></tr>`;
+
+    showResult('fp-result', `
+      <div class="result-title">✦ False Position Result</div>
+      <div class="glitter-result">Root ≈ ${fmtNum(last.c)}</div>
+      <p style="font-size:0.85rem;color:var(--slate);margin-top:4px;">f(root) = ${fmtNum(last.fc)} &nbsp;·&nbsp; ${last.i} iterations &nbsp;·&nbsp; ε = 10⁻⁶</p>
+      <div style="max-height:280px;overflow-y:auto;margin-top:14px;border-radius:10px;overflow:hidden">
+      <table class="iteration-table">
+        <thead><tr><th>k</th><th>a</th><th>b</th><th>c</th><th>f(c)</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table></div>`);
+  } catch(e) { showError('fp-error', e.message); }
+}
+
+// ══════════════════════════════════════════════════
+// 5. NEWTON
+// ══════════════════════════════════════════════════
+function solveNewton() {
+  const expr  = document.getElementById('newt-fx').value.trim();
+  const dexpr = document.getElementById('newt-dfx').value.trim();
+  let x = parseFloat(document.getElementById('newt-x0').value);
+  if (!expr) return showError('newt-error','Please enter f(x).');
+  try {
+    const TOL = 1e-6, MAX = 100;
+    const rows = [];
+    for (let k = 0; k < MAX; k++) {
+      const fx  = evalFn(expr, x);
+      const dfx = evalDFn(expr, dexpr, x);
+      if (Math.abs(dfx) < 1e-15) throw new Error('Derivative is zero at x = ' + x);
+      const xNew = x - fx / dfx;
+      const rpe = Math.abs(xNew) > 1e-15 ? Math.abs((xNew - x) / xNew) * 100 : 0;
+      rows.push({ k: k+1, x: xNew, fx: evalFn(expr, xNew), dfx, rpe });
+      x = xNew;
+      if (Math.abs(fx) < TOL) break;
+    }
+    const last = rows[rows.length - 1];
+    let tableRows = rows.map(r =>
+      `<tr><td>${r.k}</td><td>${fmtNum(r.x)}</td><td>${r.fx.toExponential(4)}</td><td>${fmtNum(r.dfx)}</td><td>${r.rpe.toFixed(4)}%</td></tr>`
+    ).join('');
+
+    showResult('newt-result', `
+      <div class="result-title">✦ Newton-Raphson Result</div>
+      <div class="glitter-result">Root ≈ ${fmtNum(last.x)}</div>
+      <p style="font-size:0.85rem;color:var(--slate);margin-top:4px;">f(root) = ${last.fx.toExponential(4)} &nbsp;·&nbsp; ${last.k} iterations &nbsp;·&nbsp; RPE = ${last.rpe.toFixed(4)}%</p>
+      <div style="max-height:280px;overflow-y:auto;margin-top:14px;border-radius:10px;overflow:hidden">
+      <table class="iteration-table">
+        <thead><tr><th>k</th><th>x_k</th><th>f(x_k)</th><th>f′(x_k)</th><th>RPE</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table></div>`);
+  } catch(e) { showError('newt-error', e.message); }
+}
+
+// ══════════════════════════════════════════════════
+// 6. SECANT
+// ══════════════════════════════════════════════════
+function solveSecant() {
+  const expr = document.getElementById('sec-fx').value.trim();
+  let x0 = parseFloat(document.getElementById('sec-x0').value);
+  let x1 = parseFloat(document.getElementById('sec-x1').value);
+  if (!expr) return showError('sec-error','Please enter f(x).');
+  try {
+    const TOL = 1e-6, MAX = 100;
+    const rows = [];
+    for (let k = 1; k <= MAX; k++) {
+      const f0 = evalFn(expr, x0), f1 = evalFn(expr, x1);
+      if (Math.abs(f1 - f0) < 1e-15) throw new Error('f(x1) - f(x0) ≈ 0. Method fails.');
+      const x2 = x1 - f1 * (x1 - x0) / (f1 - f0);
+      const f2 = evalFn(expr, x2);
+      const rpe = Math.abs(x2) > 1e-15 ? Math.abs((x2 - x1) / x2) * 100 : 0;
+      rows.push({ k, x2, f2, rpe });
+      x0 = x1; x1 = x2;
+      if (Math.abs(f2) < TOL) break;
+    }
+    const last = rows[rows.length - 1];
+    let tableRows = rows.map(r =>
+      `<tr><td>${r.k}</td><td>${fmtNum(r.x2)}</td><td>${r.f2.toExponential(4)}</td><td>${r.rpe.toFixed(4)}%</td></tr>`
+    ).join('');
+
+    showResult('sec-result', `
+      <div class="result-title">✦ Secant Method Result</div>
+      <div class="glitter-result">Root ≈ ${fmtNum(last.x2)}</div>
+      <p style="font-size:0.85rem;color:var(--slate);margin-top:4px;">f(root) = ${last.f2.toExponential(4)} &nbsp;·&nbsp; ${last.k} iterations &nbsp;·&nbsp; RPE = ${last.rpe.toFixed(4)}%</p>
+      <div style="max-height:280px;overflow-y:auto;margin-top:14px;border-radius:10px;overflow:hidden">
+      <table class="iteration-table">
+        <thead><tr><th>k</th><th>x_{k+1}</th><th>f(x)</th><th>RPE</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table></div>`);
+  } catch(e) { showError('sec-error', e.message); }
+}
+
+// ══════════════════════════════════════════════════
+// 7. LEAST SQUARES
+// ══════════════════════════════════════════════════
+function setLSType(type) {
+  document.getElementById('ls-linear-inputs').style.display = type === 'linear' ? 'block' : 'none';
+  document.getElementById('ls-nonlinear-inputs').style.display = type === 'nonlinear' ? 'block' : 'none';
+  document.getElementById('ls-linear-btn').classList.toggle('active', type === 'linear');
+  document.getElementById('ls-nonlinear-btn').classList.toggle('active', type === 'nonlinear');
+}
+
+function solveLeastSquares() {
+  const isLinear = document.getElementById('ls-linear-inputs').style.display !== 'none';
+  try {
+    if (isLinear) solveLS_linear();
+    else solveLS_nonlinear();
+  } catch(e) { showError('ls-error', e.message); }
+}
+
+function parseCSV(s) {
+  return s.split(',').map(v => parseFloat(v.trim())).filter(v => !isNaN(v));
+}
+
+function solveLS_linear() {
+  const xs = parseCSV(document.getElementById('ls-x').value);
+  const ys = parseCSV(document.getElementById('ls-y').value);
+  if (xs.length < 2 || xs.length !== ys.length) throw new Error('x and y must have the same number of values (≥ 2).');
+
+  const n = xs.length;
+  const sumX  = xs.reduce((s,v) => s+v, 0);
+  const sumY  = ys.reduce((s,v) => s+v, 0);
+  const sumXY = xs.reduce((s,v,i) => s + v * ys[i], 0);
+  const sumX2 = xs.reduce((s,v) => s + v*v, 0);
+
+  const denom = n * sumX2 - sumX * sumX;
+  if (Math.abs(denom) < 1e-15) throw new Error('Cannot compute — all x values are the same.');
+
+  const a = (n * sumXY - sumX * sumY) / denom;
+  const b = (sumY - a * sumX) / n;
+
+  // R²
+  const yMean = sumY / n;
+  const SS_res = ys.reduce((s,v,i) => s + Math.pow(v - (a*xs[i]+b), 2), 0);
+  const SS_tot = ys.reduce((s,v) => s + Math.pow(v - yMean, 2), 0);
+  const R2 = 1 - SS_res / SS_tot;
+
+  let dataRows = xs.map((xi, i) => {
+    const yfit = a*xi + b;
+    return `<tr><td>${fmtNum(xi)}</td><td>${fmtNum(ys[i])}</td><td>${fmtNum(yfit)}</td><td>${fmtNum(ys[i]-yfit)}</td></tr>`;
+  }).join('');
+
+  showResult('ls-result', `
+    <div class="result-title">✦ Linear Least Squares Fit</div>
+    <div class="glitter-result">y = ${fmtNum(a)}·x + (${fmtNum(b)})</div>
+    <div style="display:flex;gap:24px;margin-top:10px;flex-wrap:wrap">
+      <div style="background:rgba(43,89,104,0.3);border-radius:10px;padding:12px 18px">
+        <div style="font-size:0.75rem;color:var(--slate)">slope  a</div>
+        <div style="font-family:'Space Mono',monospace;color:var(--blush-light);font-size:1.1rem">${fmtNum(a)}</div>
+      </div>
+      <div style="background:rgba(43,89,104,0.3);border-radius:10px;padding:12px 18px">
+        <div style="font-size:0.75rem;color:var(--slate)">intercept  b</div>
+        <div style="font-family:'Space Mono',monospace;color:var(--blush-light);font-size:1.1rem">${fmtNum(b)}</div>
+      </div>
+      <div style="background:rgba(43,89,104,0.3);border-radius:10px;padding:12px 18px">
+        <div style="font-size:0.75rem;color:var(--slate)">R²</div>
+        <div style="font-family:'Space Mono',monospace;color:var(--gold);font-size:1.1rem">${R2.toFixed(6)}</div>
+      </div>
+    </div>
+    <div style="max-height:240px;overflow-y:auto;margin-top:14px;border-radius:10px;overflow:hidden">
+    <table class="iteration-table">
+      <thead><tr><th>x</th><th>y (data)</th><th>ŷ (fit)</th><th>residual</th></tr></thead>
+      <tbody>${dataRows}</tbody>
+    </table></div>`);
+}
+
+function solveLS_nonlinear() {
+  const xs = parseCSV(document.getElementById('ls-nl-x').value);
+  const ys = parseCSV(document.getElementById('ls-nl-y').value);
+  if (xs.length < 2 || xs.length !== ys.length) throw new Error('x and y must have the same number of values (≥ 2).');
+  const model = document.getElementById('ls-nl-model').value;
+
+  let xT, yT, label;
+
+  if (model === 'exp') {
+    // ln(y) = ln(a) + b·x  →  Y = A + b·X, X=x, Y=ln(y)
+    if (ys.some(y => y <= 0)) throw new Error('All y values must be > 0 for exponential model.');
+    xT = xs; yT = ys.map(y => Math.log(y));
+    label = 'Linearised: ln(y) = ln(a) + b·x';
+  } else if (model === 'power') {
+    // ln(y) = ln(a) + b·ln(x)  →  Y=ln(y), X=ln(x)
+    if (xs.some(x => x <= 0) || ys.some(y => y <= 0)) throw new Error('All x, y values must be > 0 for power model.');
+    xT = xs.map(x => Math.log(x)); yT = ys.map(y => Math.log(y));
+    label = 'Linearised: ln(y) = ln(a) + b·ln(x)';
+  } else {
+    // y = a + b·ln(x)  →  Y=y, X=ln(x)
+    if (xs.some(x => x <= 0)) throw new Error('All x values must be > 0 for logarithmic model.');
+    xT = xs.map(x => Math.log(x)); yT = ys;
+    label = 'Linearised: y = a + b·ln(x)';
+  }
+
+  const n = xT.length;
+  const sumX  = xT.reduce((s,v) => s+v, 0);
+  const sumY  = yT.reduce((s,v) => s+v, 0);
+  const sumXY = xT.reduce((s,v,i) => s + v * yT[i], 0);
+  const sumX2 = xT.reduce((s,v) => s + v*v, 0);
+
+  const denom = n * sumX2 - sumX * sumX;
+  if (Math.abs(denom) < 1e-15) throw new Error('Cannot compute regression.');
+
+  const bVal = (n * sumXY - sumX * sumY) / denom;
+  const aLin = (sumY - bVal * sumX) / n;
+
+  let aVal, eqStr;
+  if (model === 'exp') {
+    aVal = Math.exp(aLin);
+    eqStr = `y = ${fmtNum(aVal)}·exp(${fmtNum(bVal)}·x)`;
+  } else if (model === 'power') {
+    aVal = Math.exp(aLin);
+    eqStr = `y = ${fmtNum(aVal)}·x^${fmtNum(bVal)}`;
+  } else {
+    aVal = aLin;
+    eqStr = `y = ${fmtNum(aVal)} + ${fmtNum(bVal)}·ln(x)`;
+  }
+
+  showResult('ls-result', `
+    <div class="result-title">✦ Non-linear Least Squares Fit</div>
+    <div style="font-size:0.8rem;color:var(--slate);margin-bottom:8px;">${label}</div>
+    <div class="glitter-result">${eqStr}</div>
+    <div style="display:flex;gap:24px;margin-top:10px;flex-wrap:wrap">
+      <div style="background:rgba(43,89,104,0.3);border-radius:10px;padding:12px 18px">
+        <div style="font-size:0.75rem;color:var(--slate)">a</div>
+        <div style="font-family:'Space Mono',monospace;color:var(--blush-light);font-size:1.1rem">${fmtNum(aVal)}</div>
+      </div>
+      <div style="background:rgba(43,89,104,0.3);border-radius:10px;padding:12px 18px">
+        <div style="font-size:0.75rem;color:var(--slate)">b</div>
+        <div style="font-family:'Space Mono',monospace;color:var(--blush-light);font-size:1.1rem">${fmtNum(bVal)}</div>
+      </div>
+    </div>`);
+}
+
+// ══════════════════════════════════════════════════
+// INIT — build matrices on load
+// ══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  buildMatrix('jac', 3);
+  buildMatrix('gs',  3);
+});
+</script>
+</body>
+</html>
